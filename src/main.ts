@@ -1,26 +1,52 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import * as github from '@actions/github'
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    console.log('Starting action')
+    const token: string = core.getInput('token', { required: true })
+    const octokit = github.getOctokit(token)
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const existingFeatureBranches: string[] = (
+      await octokit.rest.repos.listBranches({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo
+      })
+    ).data.map(branch => branch.name)
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    console.log(`Existing feature branches: ${existingFeatureBranches}`)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const tags = await octokit.rest.git.listMatchingRefs({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      ref: 'tags/v'
+    })
+
+    for (const tag of tags.data) {
+      const tagName: string = tag.ref.replace('refs/tags/', '')
+      core.debug(`Tag: ${tagName}`)
+
+      const tagParts: RegExpExecArray | null =
+        /^v[0-9]*\.[0-9]*\.[0-9]*-(.*)\.([0-9]*)$/.exec(tagName)
+      if (tagParts) {
+        const featureBranchName: string = tagParts[1]
+        core.debug(`Feature branch name: ${featureBranchName}`)
+
+        if (!existingFeatureBranches.includes(`feature/${featureBranchName}`)) {
+          core.info(
+            `Branch ${featureBranchName} does not exist, so deleting tag ${tagName}`
+          )
+          await octokit.rest.git.deleteRef({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            ref: `tags/${tagName}`
+          })
+        }
+      }
+    }
   } catch (error) {
-    // Fail the workflow run if an error occurs
+    console.log('error')
+    console.log((error as Error).message)
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
