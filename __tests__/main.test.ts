@@ -11,8 +11,17 @@ import * as main from '../src/main'
 // let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 // let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
-jest.mock('@actions/core')
+let mockContexxt = {
+  repo: {
+    owner: 'mockOwner',
+    repo: 'mockRepo'
+  }
+
+}
+
+//jest.mock('@actions/core')
 jest.mock('@actions/github')
+
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -26,18 +35,13 @@ describe('action', () => {
     // getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
     // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
-
     // Mock GitHub context
-    jest.mock('@actions/github', () => ({
-      context: {
-        repo: {
-          owner: 'mockOwner',
-          repo: 'mockRepo'
-        }
-      },
-      getOctokit: jest.fn()
-    }))
-  })
+    Object.defineProperty(github, 'context', {
+      get: () => mockContexxt
+    }
+  )
+  }
+)
 
   it('deletes a tag for a non-existing branch', async () => {
     const tagTobeDeleted = 'v1.0.1-iamnotthereanymore.1'
