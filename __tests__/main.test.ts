@@ -70,7 +70,7 @@ describe('action', () => {
     expect(octokitMock.rest.git.deleteRef).toHaveBeenCalledWith({
       owner: 'mockOwner',
       repo: 'mockRepo',
-      ref: `refs/tags/${tagTobeDeleted}`
+      ref: `tags/${tagTobeDeleted}`
     });
   })
 
