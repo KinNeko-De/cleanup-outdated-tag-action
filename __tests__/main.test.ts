@@ -1,6 +1,3 @@
-/**
- * Unit tests for the action's main functionality, src/main.js
- */
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as main from '../src/main'
@@ -11,6 +8,8 @@ import * as main from '../src/main'
 // let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 // let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
+const repoOwner = 'mockOwner'
+const repoName = 'mockRepo'
 
 //jest.mock('@actions/core')
 jest.mock('@actions/github')
@@ -33,8 +32,8 @@ describe('action', () => {
     Object.defineProperty(github, context, {
       get: () => ({
         repo: {
-          owner: 'mockOwner',
-          repo: 'mockRepo'
+          owner: repoOwner,
+          repo: repoName
         }
       })
     })
@@ -47,7 +46,7 @@ describe('action', () => {
       rest: {
         repos: {
           listBranches: jest.fn().mockResolvedValue({
-            data: [{ name: 'main' }] // Only the data needed for this test
+            data: [{ name: 'main' }]
           })
         },
         git: {
@@ -65,14 +64,44 @@ describe('action', () => {
     // Assuming a function to check tag-to-branch association is implemented
     // and tags v1.0.0 and v1.0.1 do not correspond to any existing branch
     expect(octokitMock.rest.git.deleteRef).toHaveBeenCalledWith({
-      owner: 'mockOwner',
-      repo: 'mockRepo',
+      owner: repoOwner,
+      repo: repoName,
       ref: `tags/${tagTobeDeleted}`
     })
   })
 
   it('does not delete a tag for an existing branch', async () => {
     const tagToBeNotDeleted = 'v1.0.1-iamstillhere.1'
+
+    const octokitMock = {
+      rest: {
+        repos: {
+          listBranches: jest.fn().mockResolvedValue({
+            data: [{ name: 'main' }, { name: 'feature/iamstillhere' }]
+          })
+        },
+        git: {
+          listMatchingRefs: jest.fn().mockResolvedValue({
+            data: [{ ref: `refs/tags/${tagToBeNotDeleted}` }]
+          }),
+          deleteRef: jest.fn().mockResolvedValue({})
+        }
+      }
+    }
+    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+
+    await main.run()
+
+    // Check that deleteRef was not called for tags associated with existing branches
+    expect(octokitMock.rest.git.deleteRef).not.toHaveBeenCalledWith({
+      owner: repoOwner,
+      repo: repoName,
+      ref: `tags/${tagToBeNotDeleted}`
+    })
+  })
+
+  it('never deletes tags on the main branch', async () => {
+    const tagToBeNotDeleted = 'v1.0.1'
 
     const octokitMock = {
       rest: {
@@ -93,43 +122,14 @@ describe('action', () => {
 
     await main.run()
 
-    // Check that deleteRef was not called for tags associated with existing branches
     expect(octokitMock.rest.git.deleteRef).not.toHaveBeenCalledWith({
-      owner: 'mockOwner',
-      repo: 'mockRepo',
+      owner: repoOwner,
+      repo: repoName,
       ref: `tags/${tagToBeNotDeleted}`
     })
   })
 
-  it('never deletes tags on the main branch', async () => {
-    const octokitMock = {
-      rest: {
-        repos: {
-          listBranches: jest.fn().mockResolvedValue({
-            data: [{ name: 'main' }, { name: 'feature/iamstillhere' }] // Only the data needed for this test
-          })
-        },
-        git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
-            data: [{ ref: `refs/tags/v1.0.1}` }]
-          }),
-          deleteRef: jest.fn().mockResolvedValue({})
-        }
-      }
-    }
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
-
-    await main.run()
-
-    expect(octokitMock.rest.git.deleteRef).not.toHaveBeenCalledWith({
-      owner: 'mockOwner',
-      repo: 'mockRepo',
-      ref: 'tags/v1.0.1'
-    })
-  })
-
   it('should fail if a GitHub REST call throws an error', async () => {
-    // Arrange
     const errorMessage = 'GitHub API error'
     const octokitMock = {
       rest: {
@@ -151,5 +151,31 @@ describe('action', () => {
 
     expect(runMock).toHaveReturned()
     expect(setFailedMock).toHaveBeenNthCalledWith(1, errorMessage)
+  })
+
+  it('should fail if a GitHub REST call throws an unknown error', async () => {
+    const octokitMock = {
+      rest: {
+        repos: {
+          listBranches: jest.fn().mockRejectedValue('unknown error')
+        },
+        git: {
+          listMatchingRefs: jest.fn().mockResolvedValue({
+            data: [{ ref: `refs/tags/v1.0.1}` }]
+          }),
+          deleteRef: jest.fn().mockResolvedValue({})
+        }
+      }
+    }
+
+    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+
+    await main.run()
+
+    expect(runMock).toHaveReturned()
+    expect(setFailedMock).toHaveBeenNthCalledWith(
+      1,
+      'An unknown error occurred'
+    )
   })
 })
