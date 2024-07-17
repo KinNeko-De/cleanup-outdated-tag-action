@@ -4,7 +4,7 @@ import * as github from '@actions/github'
 export async function run(): Promise<void> {
   try {
     console.log('Starting action')
-    const token: string = core.getInput('token', { required: false })
+    const token: string = core.getInput('token', { required: true })
     const octokit = github.getOctokit(token)
 
     const existingFeatureBranches: string[] = (
