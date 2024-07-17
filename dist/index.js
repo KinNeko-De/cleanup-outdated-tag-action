@@ -29227,7 +29227,7 @@ const github = __importStar(__nccwpck_require__(5438));
 async function run() {
     try {
         console.log('Starting action');
-        const token = core.getInput('token', { required: false });
+        const token = core.getInput('token', { required: true });
         const octokit = github.getOctokit(token);
         const existingFeatureBranches = (await octokit.rest.repos.listBranches({
             owner: github.context.repo.owner,

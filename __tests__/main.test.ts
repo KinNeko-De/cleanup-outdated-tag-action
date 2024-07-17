@@ -5,7 +5,7 @@ import * as main from '../src/main'
 // Mock the GitHub Actions core library
 // let debugMock: jest.SpiedFunction<typeof core.debug>
 // let errorMock: jest.SpiedFunction<typeof core.error>
-let getInputMock: jest.SpiedFunction<typeof core.getInput>
+// let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 // let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
 const repoOwner = 'mockOwner'
@@ -23,17 +23,14 @@ describe('action', () => {
 
     // debugMock = jest.spyOn(core, 'debug').mockImplementation()
     // errorMock = jest.spyOn(core, 'error').mockImplementation()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
+    jest.spyOn(core, 'getInput').mockImplementation(name => {
+      if (name === 'token') {
+        return 'ghp_mockGithubToken123'
+      }
+      return ''
+    })
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
     // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
-
-
-    jest.spyOn(core, 'getInput').mockImplementation((name) => {
-      if (name === 'github_token') {
-        return 'ghp_mockGithubToken123';
-      }
-      return '';
-    });
 
     // Mock GitHub context
     Object.defineProperty(github, 'context', {
