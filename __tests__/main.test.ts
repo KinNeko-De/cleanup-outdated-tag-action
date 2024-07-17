@@ -11,17 +11,9 @@ import * as main from '../src/main'
 // let getInputMock: jest.SpiedFunction<typeof core.getInput>
 let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
 // let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
-let mockContexxt = {
-  repo: {
-    owner: 'mockOwner',
-    repo: 'mockRepo'
-  }
-
-}
 
 //jest.mock('@actions/core')
 jest.mock('@actions/github')
-
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -35,13 +27,18 @@ describe('action', () => {
     // getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
     // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+
     // Mock GitHub context
-    Object.defineProperty(github, 'context', {
-      get: () => mockContexxt
-    }
-  )
-  }
-)
+    const context: keyof typeof github = 'context'
+    Object.defineProperty(github, context, {
+      get: () => ({
+        repo: {
+          owner: 'mockOwner',
+          repo: 'mockRepo'
+        }
+      })
+    })
+  })
 
   it('deletes a tag for a non-existing branch', async () => {
     const tagTobeDeleted = 'v1.0.1-iamnotthereanymore.1'
@@ -71,7 +68,7 @@ describe('action', () => {
       owner: 'mockOwner',
       repo: 'mockRepo',
       ref: `tags/${tagTobeDeleted}`
-    });
+    })
   })
 
   it('does not delete a tag for an existing branch', async () => {
@@ -146,9 +143,9 @@ describe('action', () => {
           deleteRef: jest.fn().mockResolvedValue({})
         }
       }
-    };
-    
-    (github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    }
+
+    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
 
     await main.run()
 
