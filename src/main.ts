@@ -10,7 +10,7 @@ export async function run(): Promise<void> {
     const existingFeatureBranches: string[] = (
       await octokit.rest.repos.listBranches({
         owner: github.context.repo.owner,
-        repo: github.context.repo.repo
+        repo: github.context.repo.repo,
       })
     ).data.map(branch => branch.name)
 
@@ -45,8 +45,11 @@ export async function run(): Promise<void> {
       }
     }
   } catch (error) {
-    console.log('error')
-    console.log((error as Error).message)
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
+    else {
+      core.setFailed('An unknown error occurred')
+    }
   }
 }
