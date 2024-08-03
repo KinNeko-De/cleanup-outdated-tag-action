@@ -118,7 +118,6 @@ jobs:
         run:
           npm version ${{ steps.semantic_version.outputs.semantic_version }}
           --no-git-tag-version
-
       - name: Create semantic versioning git tag
         uses: actions/github-script@v7
         with:
