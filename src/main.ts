@@ -3,7 +3,6 @@ import * as github from '@actions/github'
 
 export async function run(): Promise<void> {
   try {
-    console.log('Starting action')
     const token: string = core.getInput('token', { required: true })
     const octokit = github.getOctokit(token)
 
@@ -14,7 +13,7 @@ export async function run(): Promise<void> {
       })
     ).data.map(branch => branch.name)
 
-    console.log(`Existing feature branches: ${existingFeatureBranches}`)
+    core.debug(`Existing feature branches: ${existingFeatureBranches}`)
 
     const tags = await octokit.rest.git.listMatchingRefs({
       owner: github.context.repo.owner,
