@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  MAJOR_MINOR_PATCH: 0.1.2
+  MAJOR_MINOR_PATCH: 0.1.3
 
 permissions:
   contents: write
@@ -118,7 +118,6 @@ jobs:
         run:
           npm version ${{ steps.semantic_version.outputs.semantic_version }}
           --no-git-tag-version
-
       - name: Create semantic versioning git tag
         uses: actions/github-script@v7
         with:

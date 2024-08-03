@@ -29226,14 +29226,13 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 async function run() {
     try {
-        console.log('Starting action');
         const token = core.getInput('token', { required: true });
         const octokit = github.getOctokit(token);
         const existingFeatureBranches = (await octokit.rest.repos.listBranches({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo
         })).data.map(branch => branch.name);
-        console.log(`Existing feature branches: ${existingFeatureBranches}`);
+        core.debug(`Existing feature branches: ${existingFeatureBranches}`);
         const tags = await octokit.rest.git.listMatchingRefs({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
