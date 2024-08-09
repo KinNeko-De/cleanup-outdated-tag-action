@@ -6,4 +6,4 @@
 [![CodeQL](https://github.com/KinNeko-De/cleanup-outdated-tag-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/KinNeko-De/cleanup-outdated-tag-action/actions/workflows/codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-Comming soon...
+Comming soon... [read my article for a short introduction at the end](https://medium.com/@kinneko-de/7d17fa85c175)
