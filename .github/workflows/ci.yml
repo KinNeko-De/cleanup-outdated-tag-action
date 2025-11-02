@@ -6,7 +6,7 @@ on:
 env:
   MAJOR: 0
   MINOR: 3
-  PATCH: 0
+  PATCH: 1
 
 permissions:
   contents: write
@@ -72,6 +72,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Compute semantic version
         id: semantic_version
@@ -144,6 +146,6 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/v${{ steps.semantic_version.outputs.semantic_version }}",
+              ref: "refs/tags/${{steps.prepare_tag.outputs.git_tag }}",
               sha: context.sha
             })
