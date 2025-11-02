@@ -2,12 +2,12 @@ module.exports = {
   env: {
     node: true,
     es6: true,
-    jest: true,
+    jest: true
   },
 
   globals: {
     Atomics: 'readonly',
-    SharedArrayBuffer: 'readonly',
+    SharedArrayBuffer: 'readonly'
   },
 
   ignorePatterns: [
@@ -15,7 +15,7 @@ module.exports = {
     '**/node_modules/.*',
     '**/dist/.*',
     '**/coverage/.*',
-    '*.json',
+    '*.json'
   ],
 
   parser: '@typescript-eslint/parser',
@@ -23,7 +23,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2023,
     sourceType: 'module',
-    project: ['./.github/linters/tsconfig.json', './tsconfig.json'],
+    project: ['./.github/linters/tsconfig.json', './tsconfig.json']
   },
 
   plugins: ['jest', '@typescript-eslint'],
@@ -33,7 +33,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:github/recommended',
-    'plugin:jest/recommended',
+    'plugin:jest/recommended'
   ],
 
   rules: {
@@ -52,11 +52,11 @@ module.exports = {
     '@typescript-eslint/consistent-type-assertions': 'error',
     '@typescript-eslint/explicit-member-accessibility': [
       'error',
-      { accessibility: 'no-public' },
+      { accessibility: 'no-public' }
     ],
     '@typescript-eslint/explicit-function-return-type': [
       'error',
-      { allowExpressions: true },
+      { allowExpressions: true }
     ],
     '@typescript-eslint/func-call-spacing': ['error', 'never'],
     '@typescript-eslint/no-array-constructor': 'error',
@@ -84,6 +84,6 @@ module.exports = {
     '@typescript-eslint/semi': ['error', 'never'],
     '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/type-annotation-spacing': 'error',
-    '@typescript-eslint/unbound-method': 'error',
-  },
-};
+    '@typescript-eslint/unbound-method': 'error'
+  }
+}
