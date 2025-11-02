@@ -4,7 +4,7 @@ author: 'Nils Diekmann'
 
 inputs:
   token:
-    description: 'GitHub token for authentication.'
+    description: 'Token for authentication. if not provided, the GITHUB_TOKEN secret will be used.'
     required: false
 
 runs:
