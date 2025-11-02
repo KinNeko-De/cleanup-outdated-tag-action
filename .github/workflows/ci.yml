@@ -83,7 +83,7 @@ jobs:
           echo "git_tag=v${{ steps.semantic_version.outputs.semantic_version }}" >> $GITHUB_OUTPUT
           echo "git_tag_major=v${{ env.MAJOR }}" >> $GITHUB_OUTPUT
 
-      - name: "Version upgraded?"
+      - name: 'Version upgraded?'
         id: version_check
         run: |
           current_version="v${{ steps.semantic_version.outputs.next_default_branch_version }}"
@@ -98,8 +98,11 @@ jobs:
             fi
           fi
 
-      - name: Move major version  ${{ steps.prepare_tag.outputs.git_tag_major }} tag
-        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      - name:
+          Move major version  ${{ steps.prepare_tag.outputs.git_tag_major }} tag
+        if:
+          github.ref == format('refs/heads/{0}',
+          github.event.repository.default_branch)
         uses: actions/github-script@v7
         env:
           majorTag: ${{ steps.prepare_tag.outputs.git_tag_major }}
@@ -128,7 +131,9 @@ jobs:
             });
             core.info(`Created tag ${majorTag} at ${context.sha}`);
 
-      - name: "Create semantic versioning git tag ${{ steps.prepare_tag.outputs.git_tag }}"
+      - name:
+          'Create semantic versioning git tag ${{
+          steps.prepare_tag.outputs.git_tag }}'
         uses: actions/github-script@v8
         with:
           script: |
