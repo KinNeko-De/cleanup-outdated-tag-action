@@ -46,4 +46,3 @@ jobs:
           VALIDATE_GIT_COMMITLINT: false
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
-          VALIDATE_TYPESCRIPT_STANDARD: false
