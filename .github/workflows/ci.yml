@@ -57,7 +57,7 @@ jobs:
         id: outdated-git-cleanup-action-token
         uses: ./
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test Local Action (without Token)
         id: outdated-git-cleanup-action-no-token
