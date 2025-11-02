@@ -7,8 +7,12 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '31 7 * * 3'
+  # The scheduled CodeQL run is commented out because GitHub disables scheduled
+  # workflows for repositories that have had no activity for 60+ days and will also not start the workflow for a pull request.
+  # Remove the comment lines below to re-enable the automatic
+  # weekly scan.
+  # schedule:
+  #   - cron: '31 7 * * 3'
 
 permissions:
   actions: read
