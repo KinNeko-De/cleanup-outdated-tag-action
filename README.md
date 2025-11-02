@@ -9,6 +9,16 @@
 Comming soon...
 [read my article for a short introduction at the end](https://medium.com/@kinneko-de/7d17fa85c175)
 
+## Usage
+
+Warning: this is a v0 pre-release. The action's inputs, outputs and behavior are
+experimental and may change without notice.
+
+```yaml
+- name: Delete outdated git tags
+  uses: KinNeko-De/cleanup-outdated-tag-action@v0
+```
+
 ## Build / Committing dist/
 
 This repository ships a compiled JavaScript bundle in `dist/` (built from the

@@ -29945,9 +29945,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
+function resolveToken() {
+    const token = core.getInput('github-token', { required: true });
+    return token;
+}
 async function run() {
     try {
-        const token = core.getInput('token', { required: true });
+        const token = resolveToken();
         const octokit = github.getOctokit(token);
         const existingFeatureBranches = (await octokit.rest.repos.listBranches({
             owner: github.context.repo.owner,

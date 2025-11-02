@@ -1,9 +1,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
+function resolveToken(): string {
+  const token = core.getInput('github-token', { required: true })
+  return token
+}
+
 export async function run(): Promise<void> {
   try {
-    const token: string = core.getInput('token', { required: true })
+    const token = resolveToken()
     const octokit = github.getOctokit(token)
 
     const existingFeatureBranches: string[] = (

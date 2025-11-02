@@ -3,9 +3,12 @@ description: 'Deletes git tags that where produced by deleted feature branches.'
 author: 'Nils Diekmann'
 
 inputs:
-  token:
-    description: 'GitHub token for authentication.'
-    required: true
+  github-token:
+    description:
+      'Token for authentication. If not provided, the GITHUB_TOKEN secret will
+      be used.'
+    default: ${{ github.token }}
+    required: false
 
 runs:
   using: node24
