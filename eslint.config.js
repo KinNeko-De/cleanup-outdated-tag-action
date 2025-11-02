@@ -5,6 +5,8 @@ const githubPlugin = require('eslint-plugin-github')
 const jestPlugin = require('eslint-plugin-jest')
 const jsoncPlugin = require('eslint-plugin-jsonc')
 const prettierPlugin = require('eslint-plugin-prettier')
+const importPlugin = require('eslint-plugin-import')
+const importResolverTypescript = require('eslint-import-resolver-typescript')
 
 const baseConfig = {
   ignores: [
@@ -26,7 +28,18 @@ const baseConfig = {
     github: githubPlugin,
     jest: jestPlugin,
     jsonc: jsoncPlugin,
-    prettier: prettierPlugin
+    prettier: prettierPlugin,
+    import: importPlugin
+  },
+
+  // Settings for import resolver so ESLint can resolve .ts imports
+  settings: {
+    'import/resolver': {
+      typescript: {
+        // include both root and linter tsconfig
+        project: ['./tsconfig.json', './.github/linters/tsconfig.json']
+      }
+    }
   },
 
   // Base rules (non-TypeScript specific)
