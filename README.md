@@ -8,3 +8,17 @@
 
 Comming soon...
 [read my article for a short introduction at the end](https://medium.com/@kinneko-de/7d17fa85c175)
+
+## Build / Committing dist/
+
+This repository ships a compiled JavaScript bundle in `dist/` (built from the TypeScript `src/` files) which is what GitHub runs when someone uses the action.
+
+Before creating a PR or pushing changes that touch `src/` or the build toolchain, regenerate the `dist/` output and commit it so CI and consumers see the expected code:
+
+```bash
+# rebuild the compiled action bundle
+npm run bundle
+```
+
+The repository contains a CI check (`.github/workflows/check-dist.yml`) that rebuilds `dist/` and fails the PR if the checked-in `dist/` does not match the build output. Keeping `dist/` in sync avoids that failure and ensures consumers of the action run the correct code.
+
