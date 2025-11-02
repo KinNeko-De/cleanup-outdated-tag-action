@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  MAJOR_MINOR_PATCH: 0.1.6
+  MAJOR_MINOR_PATCH: 0.2.0
 
 permissions:
   contents: write
@@ -17,11 +17,11 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .node-version
           cache: npm
@@ -49,7 +49,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Test Local Action
         id: outdated-git-cleanup-action
@@ -65,7 +65,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Version suffix
         id: version_suffix
@@ -119,7 +119,7 @@ jobs:
           npm version ${{ steps.semantic_version.outputs.semantic_version }}
           --no-git-tag-version
       - name: Create semantic versioning git tag
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.git.createRef({
