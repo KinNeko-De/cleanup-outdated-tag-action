@@ -36,13 +36,13 @@ jobs:
         id: install
         run: npm ci
 
-      - name: Lint Codebase
-        id: super-linter
-        uses: super-linter/super-linter/slim@v8
-        env:
-          DEFAULT_BRANCH: main
-          FILTER_REGEX_EXCLUDE: dist/**/*
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_GIT_COMMITLINT: false
-          VALIDATE_ALL_CODEBASE: true
-          VALIDATE_JSCPD: false
+      - name: Run ESLint (project)
+        id: run-eslint
+        run: |
+          # Use the project's installed eslint and plugins so imports resolve correctly
+          npm run lint
+
+      - name: Check formatting (Prettier)
+        id: prettier-check
+        run: |
+          npm run format:check
