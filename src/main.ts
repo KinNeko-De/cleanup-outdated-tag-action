@@ -1,36 +1,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-/**
- * Resolve the token to use for GitHub API calls.
- * Prefer the `token` action input; fall back to the `GITHUB_TOKEN` env var.
- * Returns the token and a flag indicating whether it came from the input.
- */
-function resolveToken(): string | undefined {
-  const inputToken = core.getInput('token')
-  const token =
-    inputToken && inputToken.length > 0 ? inputToken : process.env.GITHUB_TOKEN
-
-  core.debug(
-    inputToken
-      ? 'Using token from action input'
-      : 'Using token from GITHUB_TOKEN env'
-  )
-
+function resolveToken(): string {
+  const token = core.getInput('github-token', { required: true })
   return token
 }
 
 export async function run(): Promise<void> {
   try {
     const token = resolveToken()
-
-    if (!token) {
-      core.setFailed(
-        'No GitHub token provided via input or GITHUB_TOKEN env var'
-      )
-      return
-    }
-
     const octokit = github.getOctokit(token)
 
     const existingFeatureBranches: string[] = (
