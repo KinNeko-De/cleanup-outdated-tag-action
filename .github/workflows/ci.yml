@@ -144,6 +144,6 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/v${{ steps.semantic_version.outputs.semantic_version }}",
+              ref: "refs/tags/${{steps.prepare_tag.outputs.git_tag }}",
               sha: context.sha
             })
