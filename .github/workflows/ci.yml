@@ -6,7 +6,7 @@ on:
 env:
   MAJOR: 0
   MINOR: 3
-  PATCH: 0
+  PATCH: 1
 
 permissions:
   contents: write
@@ -20,8 +20,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         id: setup-node
@@ -74,6 +72,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Compute semantic version
         id: semantic_version
