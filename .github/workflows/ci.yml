@@ -5,8 +5,8 @@ on:
 
 env:
   MAJOR: 0
-  MINOR: 2
-  PATCH: 1
+  MINOR: 3
+  PATCH: 0
 
 permissions:
   contents: write
@@ -53,11 +53,15 @@ jobs:
         id: checkout
         uses: actions/checkout@v5
 
-      - name: Test Local Action
-        id: outdated-git-cleanup-action
+      - name: Test Local Action (with Token)
+        id: outdated-git-cleanup-action-token
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test Local Action (without Token)
+        id: outdated-git-cleanup-action-no-token
+        uses: ./
 
   version:
     name: Version

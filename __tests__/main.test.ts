@@ -182,4 +182,58 @@ describe('action', () => {
       'An unknown error occurred'
     )
   })
+
+  it('uses GITHUB_TOKEN env when token input is empty', async () => {
+    jest.clearAllMocks()
+
+    // Make core.getInput return empty so resolveToken falls back to env
+    jest.spyOn(core, 'getInput').mockImplementation(() => '')
+    // Provide a GITHUB_TOKEN in the environment
+    const envToken = 'env_token_123'
+    process.env.GITHUB_TOKEN = envToken
+
+    const octokitMock = {
+      rest: {
+        repos: {
+          listBranches: jest
+            .fn()
+            .mockResolvedValue({ data: [{ name: 'main' }] })
+        },
+        git: {
+          listMatchingRefs: jest.fn().mockResolvedValue({ data: [] }),
+          deleteRef: jest.fn().mockResolvedValue({})
+        }
+      }
+    }
+
+    const getOctokitSpy = jest
+      .spyOn(github, 'getOctokit')
+      .mockReturnValue(
+        octokitMock as unknown as ReturnType<typeof github.getOctokit>
+      )
+
+    await main.run()
+
+    expect(getOctokitSpy).toHaveBeenCalledWith(envToken)
+
+    // cleanup
+    delete process.env.GITHUB_TOKEN
+  })
+
+  it('fails when neither token input nor GITHUB_TOKEN env is provided', async () => {
+    jest.clearAllMocks()
+
+    // No input token
+    jest.spyOn(core, 'getInput').mockImplementation(() => '')
+    // Ensure env token is not present
+    delete process.env.GITHUB_TOKEN
+
+    const setFailedMock2 = jest.spyOn(core, 'setFailed').mockImplementation()
+
+    await main.run()
+
+    expect(setFailedMock2).toHaveBeenCalledWith(
+      'No GitHub token provided via input or GITHUB_TOKEN env var'
+    )
+  })
 })
