@@ -89,21 +89,6 @@ jobs:
           echo "git_tag=v${{ steps.semantic_version.outputs.semantic_version }}" >> $GITHUB_OUTPUT
           echo "git_tag_major=v${{ env.MAJOR }}" >> $GITHUB_OUTPUT
 
-      - name: 'Version upgraded?'
-        id: version_check
-        run: |
-          current_version="v${{ steps.semantic_version.outputs.next_default_branch_version }}"
-          last_main_version=$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
-          if [[ -z "$last_main_version" ]]; then
-            echo "No previous version found, proceeding..."
-          else
-            echo "Compare last main version: $last_main_version with current version: $current_version"
-            if [[ $(echo -e "$current_version\n$last_main_version" | sort -V | head -n 1) == "$current_version" ]]; then
-              echo "Please upgrade the version number to a higher value than $last_main_version"
-              exit 1
-            fi
-          fi
-
       - name:
           Move major version  ${{ steps.prepare_tag.outputs.git_tag_major }} tag
         if:
@@ -137,15 +122,51 @@ jobs:
             });
             core.info(`Created tag ${majorTag} at ${context.sha}`);
 
-      - name:
-          'Create semantic versioning git tag ${{
-          steps.prepare_tag.outputs.git_tag }}'
+      - name: Create semantic versioning git tag
         uses: actions/github-script@v8
         with:
           script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "refs/tags/${{steps.prepare_tag.outputs.git_tag }}",
-              sha: context.sha
-            })
+            // Attempt to create the desired tag; if it already exists, increment patch until a free tag is found
+            const desired = `${{ steps.prepare_tag.outputs.git_tag }}`; // e.g. v0.3.1
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+
+            core.debug(`Desired tag: ${desired}`);
+
+            function parseSemver(tag) {
+              const m = /^v(\d+)\.(\d+)\.(\d+)$/.exec(tag);
+              if (!m) return null;
+              return { major: Number(m[1]), minor: Number(m[2]), patch: Number(m[3]) };
+            }
+
+            async function tryCreate(tag) {
+              try {
+                await github.rest.git.createRef({ owner, repo, ref: `refs/tags/${tag}`, sha });
+                core.info(`Created tag ${tag}`);
+                return true;
+              } catch (err) {
+                // If reference exists, GitHub returns 422
+                if (err.status === 422 || (err.message && err.message.includes('Reference already exists'))) {
+                  core.info(`Tag ${tag} already exists`);
+                  return false;
+                }
+                throw err;
+              }
+            }
+
+            const parsed = parseSemver(desired);
+            if (!parsed) {
+              // Not a simple semver tag, just try once and let errors surface
+              await github.rest.git.createRef({ owner, repo, ref: `refs/tags/${desired}`, sha });
+              core.info(`Created tag ${desired}`);
+            } else {
+              // Try desired tag, otherwise increment patch until success (limit to 100 tries)
+              if (await tryCreate(desired)) return;
+              const maxTries = 100;
+              for (let i = 1; i <= maxTries; i++) {
+                const candidate = `v${parsed.major}.${parsed.minor}.${parsed.patch + i}`;
+                if (await tryCreate(candidate)) return;
+              }
+              throw new Error(`Could not create a unique tag after ${maxTries} attempts`);
+            }

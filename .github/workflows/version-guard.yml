@@ -1,0 +1,49 @@
+name: Ensures that version number in increased
+
+on:
+  pull_request:
+    types: [synchronize]
+
+jobs:
+  check-version:    
+    name: Ensure PR bumped CI version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: 'Version upgraded?'
+        id: version_check
+        run: |
+          current_version="v${{ steps.semantic_version.outputs.next_default_branch_version }}"
+          last_main_version=$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          if [[ -z "$last_main_version" ]]; then
+            echo "No previous version found, proceeding..."
+          else
+            echo "Compare last main version: $last_main_version with current version: $current_version"
+            if [[ $(echo -e "$current_version\n$last_main_version" | sort -V | head -n 1) == "$current_version" ]]; then
+              echo "Please upgrade the version number to a higher value than $last_main_version"
+              exit 1
+            fi
+          fi
+
+    
+      #- name: Install yq (mikefarah)
+      #  run: |
+      #    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+      #    sudo chmod +x /usr/local/bin/yq
+      #    yq --version
+
+      #- name: Read CI workflow version
+      #  id: read_ci
+      #  run: |
+      #    # Read numeric MAJOR/MINOR/PATCH from the ci workflow in this PR branch
+      #    MAJ=$(yq e '.env.MAJOR' .github/workflows/ci.yml)
+      #    MIN=$(yq e '.env.MINOR' .github/workflows/ci.yml)
+      #    PATCH=$(yq e '.env.PATCH' .github/workflows/ci.yml)
+      #    echo "version=${MAJ}.${MIN}.${PATCH}" >> $GITHUB_OUTPUT

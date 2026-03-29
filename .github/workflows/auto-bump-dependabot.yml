@@ -1,0 +1,79 @@
+name: Auto-bump ci.yml for Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
+concurrency:
+  group: dependabot-auto-bump-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Count open Dependabot PRs and bump version
+        id: bump
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+            const prCreated = new Date(context.payload.pull_request.created_at);
+
+            // Read ci.yml from main to get the authoritative version
+            const mainCi = await github.repos.getContent({ owner, repo, path: '.github/workflows/ci.yml', ref: 'main' });
+            const ciText = Buffer.from(mainCi.data.content, 'base64').toString();
+            const m = ciText.match(/version:\s*v?(\d+)\.(\d+)\.(\d+)/);
+            if (!m) core.setFailed('Could not find version in .github/workflows/ci.yml on main');
+            const major = parseInt(m[1], 10);
+            const minor = parseInt(m[2], 10);
+            const patch = parseInt(m[3], 10);
+
+            // Find open Dependabot PRs targeting main and sort by created date
+            const q = `repo:${owner}/${repo} type:pr state:open author:dependabot[bot] base:main`;
+            const res = await github.search.issuesAndPullRequests({ q, per_page: 100 });
+            const items = res.data.items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+            // Ensure this PR is included and determine its 1-based index among dependabot PRs
+            let index = items.findIndex(i => i.number === prNumber);
+            if (index === -1) {
+              items.push({ number: prNumber, created_at: context.payload.pull_request.created_at });
+              items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+              index = items.findIndex(i => i.number === prNumber);
+            }
+            const bumpBy = index + 1; // earliest PR bumps by 1, next by 2, etc.
+            const newPatch = patch + bumpBy;
+            const newVersion = `v${major}.${minor}.${newPatch}`;
+            const newCiText = ciText.replace(/version:\s*v?\d+\.\d+\.\d+/, `version: ${newVersion}`);
+
+            // Update the file on the PR head branch
+            const headRef = context.payload.pull_request.head.ref;
+            let headFileSha = null;
+            try {
+              const headFile = await github.repos.getContent({ owner, repo, path: '.github/workflows/ci.yml', ref: headRef });
+              headFileSha = headFile.data.sha;
+            } catch (err) {
+              core.info('File not present on head branch, will create');
+            }
+
+            const contentBase64 = Buffer.from(newCiText).toString('base64');
+            await github.repos.createOrUpdateFileContents({
+              owner,
+              repo,
+              path: '.github/workflows/ci.yml',
+              message: `chore(ci): bump ci.yml version to ${newVersion} for dependabot PR #${prNumber}`,
+              content: contentBase64,
+              branch: headRef,
+              sha: headFileSha || undefined,
+            });
+
+            core.setOutput('new_version', newVersion);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
