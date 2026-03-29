@@ -1,36 +1,37 @@
+import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as main from '../src/main'
 
 // Mock the GitHub Actions core library
-// let debugMock: jest.SpiedFunction<typeof core.debug>
-// let errorMock: jest.SpiedFunction<typeof core.error>
-// let getInputMock: jest.SpiedFunction<typeof core.getInput>
-let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
-// let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
+// let debugMock: MockInstance<typeof core.debug>
+// let errorMock: MockInstance<typeof core.error>
+// let getInputMock: MockInstance<typeof core.getInput>
+let setFailedMock: MockInstance
+// let setOutputMock: MockInstance<typeof core.setOutput>
 const repoOwner = 'mockOwner'
 const repoName = 'mockRepo'
 
-jest.mock('@actions/core')
-jest.mock('@actions/github')
+vi.mock('@actions/core')
+vi.mock('@actions/github')
 
 // Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
+const runMock = vi.spyOn(main, 'run')
 
 describe('action', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
-    // debugMock = jest.spyOn(core, 'debug').mockImplementation()
-    // errorMock = jest.spyOn(core, 'error').mockImplementation()
-    jest.spyOn(core, 'getInput').mockImplementation(name => {
+    // debugMock = vi.spyOn(core, 'debug').mockImplementation()
+    // errorMock = vi.spyOn(core, 'error').mockImplementation()
+    vi.spyOn(core, 'getInput').mockImplementation(name => {
       if (name === 'token') {
         return 'ghp_mockGithubToken123'
       }
       return ''
     })
-    setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-    // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+    setFailedMock = vi.spyOn(core, 'setFailed').mockImplementation(() => {})
+    // setOutputMock = vi.spyOn(core, 'setOutput').mockImplementation()
 
     // Mock GitHub context
     Object.defineProperty(github, 'context', {
@@ -49,19 +50,19 @@ describe('action', () => {
     const octokitMock = {
       rest: {
         repos: {
-          listBranches: jest.fn().mockResolvedValue({
+          listBranches: vi.fn().mockResolvedValue({
             data: [{ name: 'main' }]
           })
         },
         git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
+          listMatchingRefs: vi.fn().mockResolvedValue({
             data: [{ ref: `refs/tags/${tagTobeDeleted}` }]
           }),
-          deleteRef: jest.fn().mockResolvedValue({})
+          deleteRef: vi.fn().mockResolvedValue({})
         }
       }
     }
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    ;(github.getOctokit as unknown as MockInstance).mockReturnValue(octokitMock)
 
     await main.run()
 
@@ -80,19 +81,19 @@ describe('action', () => {
     const octokitMock = {
       rest: {
         repos: {
-          listBranches: jest.fn().mockResolvedValue({
+          listBranches: vi.fn().mockResolvedValue({
             data: [{ name: 'main' }, { name: 'feature/iamstillhere' }]
           })
         },
         git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
+          listMatchingRefs: vi.fn().mockResolvedValue({
             data: [{ ref: `refs/tags/${tagToBeNotDeleted}` }]
           }),
-          deleteRef: jest.fn().mockResolvedValue({})
+          deleteRef: vi.fn().mockResolvedValue({})
         }
       }
     }
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    ;(github.getOctokit as unknown as MockInstance).mockReturnValue(octokitMock)
 
     await main.run()
 
@@ -110,19 +111,19 @@ describe('action', () => {
     const octokitMock = {
       rest: {
         repos: {
-          listBranches: jest.fn().mockResolvedValue({
+          listBranches: vi.fn().mockResolvedValue({
             data: [{ name: 'main' }, { name: 'feature/iamstillhere' }] // Only the data needed for this test
           })
         },
         git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
+          listMatchingRefs: vi.fn().mockResolvedValue({
             data: [{ ref: `refs/tags/${tagToBeNotDeleted}` }]
           }),
-          deleteRef: jest.fn().mockResolvedValue({})
+          deleteRef: vi.fn().mockResolvedValue({})
         }
       }
     }
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    ;(github.getOctokit as unknown as MockInstance).mockReturnValue(octokitMock)
 
     await main.run()
 
@@ -138,18 +139,18 @@ describe('action', () => {
     const octokitMock = {
       rest: {
         repos: {
-          listBranches: jest.fn().mockRejectedValue(new Error(errorMessage))
+          listBranches: vi.fn().mockRejectedValue(new Error(errorMessage))
         },
         git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
+          listMatchingRefs: vi.fn().mockResolvedValue({
             data: [{ ref: `refs/tags/v1.0.1}` }]
           }),
-          deleteRef: jest.fn().mockResolvedValue({})
+          deleteRef: vi.fn().mockResolvedValue({})
         }
       }
     }
 
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    ;(github.getOctokit as unknown as MockInstance).mockReturnValue(octokitMock)
 
     await main.run()
 
@@ -161,18 +162,18 @@ describe('action', () => {
     const octokitMock = {
       rest: {
         repos: {
-          listBranches: jest.fn().mockRejectedValue('unknown error')
+          listBranches: vi.fn().mockRejectedValue('unknown error')
         },
         git: {
-          listMatchingRefs: jest.fn().mockResolvedValue({
+          listMatchingRefs: vi.fn().mockResolvedValue({
             data: [{ ref: `refs/tags/v1.0.1}` }]
           }),
-          deleteRef: jest.fn().mockResolvedValue({})
+          deleteRef: vi.fn().mockResolvedValue({})
         }
       }
     }
 
-    ;(github.getOctokit as jest.Mock).mockReturnValue(octokitMock)
+    ;(github.getOctokit as unknown as MockInstance).mockReturnValue(octokitMock)
 
     await main.run()
 
